@@ -70,25 +70,25 @@ int main(void)
             for ( int L1 = 0; L1 < 6; L1++) // отдельный цикл for для каждого из значения id в этом случае 6
             {
                 bsp_board_led_invert(i);
-                nrf_delay_ms(100);
+                nrf_delay_ms(150);
             }
             nrf_delay_ms(1000);
             for ( int L2 = 0; L2 < 6; L2++)
             {
                 bsp_board_led_invert(i);
-                nrf_delay_ms(100);
+                nrf_delay_ms(150);
             }
              nrf_delay_ms(1000);
              for ( int L3 = 0; L3 < 1; L3++)
             {
                 bsp_board_led_invert(i);
-                nrf_delay_ms(100);
+                nrf_delay_ms(150);
             }
              nrf_delay_ms(1000);
              for ( int L4 = 0; L4 < 5; L4++)
             {
                 bsp_board_led_invert(i);
-                nrf_delay_ms(100);
+                nrf_delay_ms(150);
             }
             nrf_delay_ms(1000);
             
