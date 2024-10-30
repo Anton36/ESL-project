@@ -147,7 +147,7 @@ $(DFU_PACKAGE): $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
 	   --sd-req 0x0,0x102 \
 	   --sd-id 0x102 \
 	   --application $< \
-	   $@
+	    $@
 
 dfu: $(DFU_PACKAGE)
 	@echo Performing DFU with generated package
