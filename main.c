@@ -44,7 +44,7 @@ void systick_pwm(int);
 void clock_event_handler(nrfx_clock_evt_type_t event);
 
 volatile bool double_click = false;
-volatile bool single_click = false;
+volatile  int number_of_click = 0;
 volatile bool debounce_timer_active = false;
 volatile bool doubleclick_timer_active = false;
 
@@ -95,31 +95,46 @@ int main(void)
 
 void button_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-    
-        nrf_gpio_pin_write(led_digits[0], LED_ON_STATE);
-    
-
-    
+    if(debounce_timer_active == 0)
+    {
         app_timer_start(debounce_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
         debounce_timer_active = true;
     
+    }
+        
+    
+
+    
+        
+        
 
 }
 
 void debounce_IRQHandler(void * p_context)
 {
     debounce_timer_active = false;
-    nrf_gpio_pin_write(led_digits[1], LED_ON_STATE);
+    
 
     if (nrf_gpio_pin_read(BUTTON_PIN) == BUTTON_PRESSED_STATE)
     {
-        app_timer_start(double_click_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
+        number_of_click++;
+        if(number_of_click == 1)
+        {
+            app_timer_start(double_click_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
+        } else if (number_of_click == 2)
+        {
+            double_click = true;
+            number_of_click = 0;
+        }
+
+        
     }
 
 }
 
 void double_click_IRQHandler(void * p_context)
 {
+    number_of_click = 0;
 
 }
 
@@ -127,7 +142,7 @@ void double_click_IRQHandler(void * p_context)
 
 void gpio_init()
 {
-    //nrf_gpio_cfg_input(BUTTON_PIN, NRF_GPIO_PIN_PULLUP); // конфигурация кнопки в качестве входа с подтягивающим вверх резистором
+    
     nrfx_gpiote_in_config_t btn_config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(false);
     btn_config.pull = NRF_GPIO_PIN_PULLUP;
     nrfx_gpiote_in_init(BUTTON_PIN, &btn_config, button_event_handler);
