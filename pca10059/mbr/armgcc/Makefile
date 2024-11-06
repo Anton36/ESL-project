@@ -15,6 +15,10 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
+  $(SDK_ROOT)/components/libraries/timer/app_timer2.c \
+  $(SDK_ROOT)/components/libraries/timer/drv_rtc.c \
+  $(SDK_ROOT)/components/libraries/atomic_fifo/nrf_atfifo.c \
+  $(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
   $(SDK_ROOT)/components/boards/boards.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
@@ -33,6 +37,11 @@ SRC_FILES += \
   $(PROJ_DIR)/main.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_systick.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
+
+  
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -46,6 +55,9 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/util \
   ../config \
   $(SDK_ROOT)/components/libraries/balloc \
+  $(SDK_ROOT)/components/libraries/timer \
+  $(SDK_ROOT)/components/libraries/atomic_fifo \
+  $(SDK_ROOT)/components/libraries/sortlist \
   $(SDK_ROOT)/components/libraries/ringbuf \
   $(SDK_ROOT)/modules/nrfx/hal \
   $(SDK_ROOT)/components/libraries/bsp \
@@ -60,6 +72,9 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/memobj \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(SDK_ROOT)/integration/nrfx/legacy \
+  $(SDK_ROOT)/components/softdevice/common \
+  
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -84,6 +99,8 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
+CFLAGS += -DAPP_TIMER_V2
+CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 
 
 # C++ flags common to all targets

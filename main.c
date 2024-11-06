@@ -2,9 +2,16 @@
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "boards.h"
-#include "nrf_gpio.h"
+
+#include "nrfx_gpiote.h"
+
+#include "app_timer.h"
+#include "drv_rtc.h"
+#include "nrfx_clock.h"
 
 #include "nrfx_systick.h"
+
+
 
 #define MIN_DELAY 500
 #define MAX_DELAY 1000
@@ -12,6 +19,9 @@
 
 #define PWM_PERIOD_US 1000
 #define PWM_STEP 1
+
+#define DEBOUNCING_DELAY 50
+#define DOUBLE_CLICK_DELAY 500
 
 #define LED_ON_STATE 0
 #define LED_OFF_STATE 1
@@ -25,11 +35,21 @@
 
 #define BUTTON_PIN NRF_GPIO_PIN_MAP(1, 6)
 
-void gpio_unit(void);
+void gpio_init(void);
 void led_on(int);
 void led_off(int);
-
+void timer_init(void);
+void lfclk_request(void);
 void systick_pwm(int);
+void clock_event_handler(nrfx_clock_evt_type_t event);
+
+volatile bool double_click = false;
+volatile bool single_click = false;
+volatile bool debounce_timer_active = false;
+volatile bool doubleclick_timer_active = false;
+
+APP_TIMER_DEF(debounce_timer);
+APP_TIMER_DEF(double_click_timer);
 
 static int led_digits[] = {LED0_GREEN_PIN, LED1_RED_PIN, LED2_GREEN_PIN, LED3_BLUE_PIN};
 static int id_digits[] = {6, 6, 1, 5};
@@ -43,13 +63,19 @@ int main(void)
 {
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
-    gpio_unit();
+   lfclk_request();
+    app_timer_init();
+   timer_init();
     nrfx_systick_init();
+    nrfx_gpiote_init();
+    gpio_init();
+    
+   
 
     /* Toggle LEDs. */
     while (true)
     {
-        if (nrf_gpio_pin_read(BUTTON_PIN) == BUTTON_PRESSED_STATE)
+        while(double_click)
         {
             systick_pwm(i_leds);
             nrf_delay_ms(MICRO_DELAY);
@@ -60,16 +86,56 @@ int main(void)
                 i_leds = (i_leds + 1) % LEDS_NUMBER;
             }
         }
-        else
-        {
-            nrf_delay_ms(MICRO_DELAY);
-        }
+        
     }
 }
-void gpio_unit()
-{
-    nrf_gpio_cfg_input(BUTTON_PIN, NRF_GPIO_PIN_PULLUP); // конфигурация кнопки в качестве входа с подтягивающим вверх резистором
 
+
+
+
+void button_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    
+        nrf_gpio_pin_write(led_digits[0], LED_ON_STATE);
+    
+
+    
+        app_timer_start(debounce_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
+        debounce_timer_active = true;
+    
+
+}
+
+void debounce_IRQHandler(void * p_context)
+{
+    debounce_timer_active = false;
+    nrf_gpio_pin_write(led_digits[1], LED_ON_STATE);
+
+    if (nrf_gpio_pin_read(BUTTON_PIN) == BUTTON_PRESSED_STATE)
+    {
+        app_timer_start(double_click_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
+    }
+
+}
+
+void double_click_IRQHandler(void * p_context)
+{
+
+}
+
+
+
+void gpio_init()
+{
+    //nrf_gpio_cfg_input(BUTTON_PIN, NRF_GPIO_PIN_PULLUP); // конфигурация кнопки в качестве входа с подтягивающим вверх резистором
+    nrfx_gpiote_in_config_t btn_config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(false);
+    btn_config.pull = NRF_GPIO_PIN_PULLUP;
+    nrfx_gpiote_in_init(BUTTON_PIN, &btn_config, button_event_handler);
+    nrfx_gpiote_in_event_enable(BUTTON_PIN, true);
+   
+   
+   
+    
     nrf_gpio_cfg_output(LED0_GREEN_PIN); // LED0
     nrf_gpio_cfg_output(LED1_RED_PIN);   // LED1
     nrf_gpio_cfg_output(LED2_GREEN_PIN); // LED2
@@ -125,4 +191,29 @@ void systick_pwm(int led_index)
             }
         }
     
+}
+void timer_init(void)
+{
+    
+    
+    
+
+    app_timer_create(&debounce_timer,
+                    APP_TIMER_MODE_SINGLE_SHOT,
+                    debounce_IRQHandler);
+    app_timer_create(&double_click_timer,
+                    APP_TIMER_MODE_SINGLE_SHOT,
+                    double_click_IRQHandler);
+}
+
+void clock_event_handler(nrfx_clock_evt_type_t event)
+{
+  
+}
+
+void lfclk_request(void)
+{
+    nrfx_clock_init(clock_event_handler);
+    nrfx_clock_enable();
+    nrfx_clock_lfclk_start();
 }
