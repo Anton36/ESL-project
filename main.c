@@ -123,7 +123,14 @@ void debounce_IRQHandler(void * p_context)
             app_timer_start(double_click_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
         } else if (number_of_click == 2)
         {
-            double_click = true;
+            if (double_click == true)
+            {
+                double_click = false;
+            }
+            else
+            {
+                double_click = true;
+            }
             number_of_click = 0;
         }
 
