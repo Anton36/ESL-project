@@ -11,8 +11,6 @@
 
 #include "nrfx_systick.h"
 
-
-
 #define MIN_DELAY 500
 #define MAX_DELAY 1000
 #define MICRO_DELAY 100
@@ -44,7 +42,7 @@ void systick_pwm(int);
 void clock_event_handler(nrfx_clock_evt_type_t event);
 
 volatile bool double_click = false;
-volatile  int number_of_click = 0;
+volatile int number_of_click = 0;
 volatile bool debounce_timer_active = false;
 volatile bool doubleclick_timer_active = false;
 
@@ -63,22 +61,20 @@ int main(void)
 {
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
-   lfclk_request();
+    lfclk_request();
     app_timer_init();
-   timer_init();
+    timer_init();
     nrfx_systick_init();
     nrfx_gpiote_init();
     gpio_init();
-    
-   
 
     /* Toggle LEDs. */
     while (true)
     {
-        while(double_click)
+        while (double_click)
         {
             systick_pwm(i_leds);
-            nrf_delay_ms(MICRO_DELAY);
+
             i_blink++;
             if (i_blink >= id_digits[i_leds])
             {
@@ -86,78 +82,57 @@ int main(void)
                 i_leds = (i_leds + 1) % LEDS_NUMBER;
             }
         }
-        
     }
 }
-
-
-
 
 void button_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-    if(debounce_timer_active == 0)
+
+    if (debounce_timer_active == 0)
     {
-        app_timer_start(debounce_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
-        debounce_timer_active = true;
-    
+
+        app_timer_start(debounce_timer, APP_TIMER_TICKS(DEBOUNCING_DELAY), NULL);
     }
-        
-    
-
-    
-        
-        
-
 }
 
-void debounce_IRQHandler(void * p_context)
+void debounce_Handler(void *p_context)
 {
-    debounce_timer_active = false;
-    
 
     if (nrf_gpio_pin_read(BUTTON_PIN) == BUTTON_PRESSED_STATE)
     {
         number_of_click++;
-        if(number_of_click == 1)
+        if (number_of_click == 1)
         {
-            app_timer_start(double_click_timer,APP_TIMER_TICKS(DEBOUNCING_DELAY),NULL);
-        } else if (number_of_click == 2)
-        {
-            if (double_click == true)
-            {
-                double_click = false;
-            }
-            else
-            {
-                double_click = true;
-            }
-            number_of_click = 0;
+
+            app_timer_start(double_click_timer, APP_TIMER_TICKS(DOUBLE_CLICK_DELAY), NULL);
         }
-
-        
     }
-
 }
 
-void double_click_IRQHandler(void * p_context)
+void double_click_Handler(void *p_context)
 {
+    if (number_of_click == 2)
+    {
+        if (double_click == true)
+        {
+            double_click = false;
+        }
+        else
+        {
+            double_click = true;
+        }
+    }
     number_of_click = 0;
-
 }
-
-
 
 void gpio_init()
 {
-    
+
     nrfx_gpiote_in_config_t btn_config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(false);
     btn_config.pull = NRF_GPIO_PIN_PULLUP;
     nrfx_gpiote_in_init(BUTTON_PIN, &btn_config, button_event_handler);
     nrfx_gpiote_in_event_enable(BUTTON_PIN, true);
-   
-   
-   
-    
+
     nrf_gpio_cfg_output(LED0_GREEN_PIN); // LED0
     nrf_gpio_cfg_output(LED1_RED_PIN);   // LED1
     nrf_gpio_cfg_output(LED2_GREEN_PIN); // LED2
@@ -178,59 +153,63 @@ void led_off(int led_index)
     nrf_gpio_pin_write(led_digits[led_index], LED_OFF_STATE);
 }
 
-
-
 void systick_pwm(int led_index)
 {
     int duty_cycle = 0;
     nrfx_systick_state_t pwm_time;
-    
-    
 
-        for (duty_cycle = 0; duty_cycle <= PWM_PERIOD_US; duty_cycle += PWM_STEP)
+    for (duty_cycle = 0; duty_cycle <= PWM_PERIOD_US; duty_cycle += PWM_STEP)
+    {
+        led_off(led_index);
+        nrfx_systick_get(&pwm_time);
+        led_on(led_index);
+        while (!nrfx_systick_test(&pwm_time, duty_cycle))
         {
-            nrfx_systick_get(&pwm_time);
-            led_on(led_index);
-            while (!nrfx_systick_test(&pwm_time, duty_cycle))
+        }
+        nrfx_systick_get(&pwm_time);
+        led_off(led_index);
+        while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
+        {
+        }
+    }
+
+    for (duty_cycle = PWM_PERIOD_US; duty_cycle > 0; duty_cycle -= PWM_STEP)
+    {
+        led_off(led_index);
+        nrfx_systick_get(&pwm_time);
+        led_on(led_index);
+        while (!nrfx_systick_test(&pwm_time, duty_cycle))
+        {
+            if (double_click == 0)
             {
-            }
-            led_off(led_index);
-            while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
-            {
+                return;
             }
         }
-
-        for (duty_cycle = PWM_PERIOD_US; duty_cycle > 0; duty_cycle -= PWM_STEP)
+        nrfx_systick_get(&pwm_time);
+        led_off(led_index);
+        while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
         {
-            nrfx_systick_get(&pwm_time);
-            led_on(led_index);
-            while (!nrfx_systick_test(&pwm_time, duty_cycle))
+            if (double_click == 0)
             {
-            }
-            led_off(led_index);
-            while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
-            {
+                return;
             }
         }
-    
+    }
 }
 void timer_init(void)
 {
-    
-    
-    
+
+    app_timer_create(&double_click_timer,
+                     APP_TIMER_MODE_SINGLE_SHOT,
+                     double_click_Handler);
 
     app_timer_create(&debounce_timer,
-                    APP_TIMER_MODE_SINGLE_SHOT,
-                    debounce_IRQHandler);
-    app_timer_create(&double_click_timer,
-                    APP_TIMER_MODE_SINGLE_SHOT,
-                    double_click_IRQHandler);
+                     APP_TIMER_MODE_SINGLE_SHOT,
+                     debounce_Handler);
 }
 
 void clock_event_handler(nrfx_clock_evt_type_t event)
 {
-  
 }
 
 void lfclk_request(void)
