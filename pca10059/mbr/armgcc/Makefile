@@ -41,6 +41,13 @@ SRC_FILES += \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_default_backends.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_uart.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_usb.c \
+  
 
   
 
