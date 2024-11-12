@@ -70,34 +70,41 @@ int main(void)
 {
     /* Configure board. */
     bsp_board_init(BSP_INIT_LEDS);
-    lfclk_request();
+    //lfclk_request();
+    
     app_timer_init();
     timer_init();
+    led_on(0);
     nrfx_systick_init();
     nrfx_gpiote_init();
     gpio_init();
     logs_init();
+    
     NRF_LOG_INFO("Starting up the test project with USB logging");
 
     /* Toggle LEDs. */
     while (true)
     {
+        
+        LOG_BACKEND_USB_PROCESS();
+        NRF_LOG_PROCESS();
         if (double_click)
         {
             systick_pwm(i_leds);
 
             i_blink++;
             NRF_LOG_INFO("i_blink++");
-            LOG_BACKEND_USB_PROCESS();
-            NRF_LOG_PROCESS();
+           
             if (i_blink >= id_digits[i_leds])
             {
                 i_blink = 0;
                 i_leds = (i_leds + 1) % LEDS_NUMBER;
+                NRF_LOG_INFO("i_leds++");
             }
         }
         else if ((double_click == 0) & (current_duty_cycle != 0) )
         {
+            
             maintain_pwm(i_leds, current_duty_cycle);
         }
     }
@@ -105,6 +112,7 @@ int main(void)
 
 void button_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
+    
 
     if (debounce_timer_active == 0)
     {
@@ -133,10 +141,14 @@ void double_click_Handler(void *p_context)
     {
         if (double_click == true)
         {
+            NRF_LOG_INFO("stoped");
             double_click = false;
         }
         else
         {
+            NRF_LOG_INFO("double click");
+            //LOG_BACKEND_USB_PROCESS();
+            //NRF_LOG_PROCESS();
             double_click = true;
         }
     }
@@ -228,6 +240,9 @@ void systick_pwm(int led_index)
 
 void maintain_pwm(int led_index, int duty_cycle)
 {
+    
+    //LOG_BACKEND_USB_PROCESS();
+    //NRF_LOG_PROCESS();
     nrfx_systick_state_t pwm_time;
 
     led_off(led_index);
@@ -268,6 +283,7 @@ void clock_event_handler(nrfx_clock_evt_type_t event)
 
 void lfclk_request(void)
 {
+    led_on(1);
     nrfx_clock_init(clock_event_handler);
     nrfx_clock_enable();
     nrfx_clock_lfclk_start();
