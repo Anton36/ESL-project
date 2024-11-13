@@ -147,8 +147,7 @@ void double_click_Handler(void *p_context)
         else
         {
             NRF_LOG_INFO("double click");
-            //LOG_BACKEND_USB_PROCESS();
-            //NRF_LOG_PROCESS();
+            
             double_click = true;
         }
     }
@@ -241,8 +240,7 @@ void systick_pwm(int led_index)
 void maintain_pwm(int led_index, int duty_cycle)
 {
     
-    //LOG_BACKEND_USB_PROCESS();
-    //NRF_LOG_PROCESS();
+    
     nrfx_systick_state_t pwm_time;
 
     led_off(led_index);
