@@ -65,6 +65,8 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_systick.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c \
   $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/button_handler.c \
+  $(PROJ_DIR)/led_handler.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
