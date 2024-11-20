@@ -2,86 +2,65 @@
 #include "pwm_handler.h"
 #include "nrfx_systick.h"
 #include "led_handler.h"
+#include "nrf_log.h"
 
-
-
-void systick_pwm(int led_index)
+void systick_get_time(pwm_systick_t *pwm_systick)
 {
-    int duty_cycle = current_duty_cycle;
-    nrfx_systick_state_t pwm_time;
-
-    for (; duty_cycle <= PWM_PERIOD_US; duty_cycle += PWM_STEP)
-    {
-        current_duty_cycle = duty_cycle;
-        led_off(led_index);
-        nrfx_systick_get(&pwm_time);
-        led_on(led_index);
-        while (!nrfx_systick_test(&pwm_time, duty_cycle))
-        {
-            if (double_click == 0)
-            {
-                return;
-            }
-        }
-        nrfx_systick_get(&pwm_time);
-        led_off(led_index);
-        while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
-        {
-            if (double_click == 0)
-            {
-                return;
-            }
-        }
-    }
-    duty_cycle = current_duty_cycle;
-
-    for (; duty_cycle >= 0; duty_cycle -= PWM_STEP)
-    {
-        current_duty_cycle = duty_cycle;
-        led_off(led_index);
-        nrfx_systick_get(&pwm_time);
-        led_on(led_index);
-        while (!nrfx_systick_test(&pwm_time, duty_cycle))
-        {
-            if (double_click == 0)
-            {
-                return;
-            }
-        }
-        nrfx_systick_get(&pwm_time);
-        led_off(led_index);
-        while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
-        {
-            if (double_click == 0)
-            {
-                return;
-            }
-        }
-    }
+    nrfx_systick_get(&pwm_systick->pwm_time);
 }
 
-void maintain_pwm(int led_index, int duty_cycle)
+void pwm_systick_state(pwm_systick_t *pwm_systick, int maintain_flag)
 {
+    int timeout;
 
-    nrfx_systick_state_t pwm_time;
-
-    led_off(led_index);
-    nrfx_systick_get(&pwm_time);
-    led_on(led_index);
-    while (!nrfx_systick_test(&pwm_time, duty_cycle))
+    if (pwm_systick->state)
     {
-        if (double_click == 1)
+        timeout = pwm_systick->frequency_hz - pwm_systick->current_duty;
+    }
+    else
+    {
+        timeout = pwm_systick->current_duty;
+    }
+
+    if (!nrfx_systick_test(&pwm_systick->pwm_time, timeout))
+    {
+        return;
+    }
+
+    pwm_systick->state = !pwm_systick->state;
+    if (maintain_flag == 0)
+    {
+
+        if ((pwm_systick->current_duty == 1000) && (!pwm_systick->direction))
         {
-            return;
+            pwm_systick->direction = true;
+            NRF_LOG_INFO("Достигли предела скважности ,начинаем убывать");
+        }
+
+        if ((pwm_systick->current_duty == 0) && (pwm_systick->direction))
+        {
+            pwm_systick->direction = false;
+            NRF_LOG_INFO("Достигли начала скважности ,начинаем возрастать");
+        }
+
+        if (!pwm_systick->state && pwm_systick->direction)
+        {
+            pwm_systick->current_duty -= pwm_systick->step;
+        }
+
+        if (pwm_systick->state && !pwm_systick->direction)
+        {
+            pwm_systick->current_duty += pwm_systick->step;
         }
     }
-    nrfx_systick_get(&pwm_time);
-    led_off(led_index);
-    while (!nrfx_systick_test(&pwm_time, PWM_PERIOD_US - duty_cycle))
+
+    systick_get_time(pwm_systick);
+    if (pwm_systick->state == 0)
     {
-        if (double_click == 1)
-        {
-            return;
-        }
+        led_on(i_leds);
+    }
+    else
+    {
+        led_off(i_leds);
     }
 }

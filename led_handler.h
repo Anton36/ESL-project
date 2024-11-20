@@ -11,8 +11,6 @@
 
 extern int led_digits[];
 
-
-
 void led_on(int);
 void led_off(int);
 void led_init(void);

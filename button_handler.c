@@ -2,7 +2,6 @@
 #include "nrfx_gpiote.h"
 #include "nrf_log.h"
 
-
 volatile int number_of_click = 0;
 volatile bool debounce_timer_active = false;
 volatile bool doubleclick_timer_active = false;
@@ -10,10 +9,8 @@ volatile bool doubleclick_timer_active = false;
 APP_TIMER_DEF(debounce_timer);
 APP_TIMER_DEF(double_click_timer);
 
-
 void button_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-    
 
     if (debounce_timer_active == 0)
     {
@@ -44,17 +41,20 @@ void double_click_Handler(void *p_context)
         {
             NRF_LOG_INFO("stoped");
             double_click = false;
+            maintain_flag = 1;
+            NRF_LOG_INFO("go to maintain led");
         }
         else
         {
             NRF_LOG_INFO("double click");
-            
+            maintain_flag = 0;
+            NRF_LOG_INFO("go to pwm led");
+
             double_click = true;
         }
     }
     number_of_click = 0;
 }
-
 
 void gpio_button_init()
 {
@@ -63,8 +63,6 @@ void gpio_button_init()
     btn_config.pull = NRF_GPIO_PIN_PULLUP;
     nrfx_gpiote_in_init(BUTTON_PIN, &btn_config, button_event_handler);
     nrfx_gpiote_in_event_enable(BUTTON_PIN, true);
-
-    
 }
 
 void timer_init(void)
@@ -78,4 +76,3 @@ void timer_init(void)
                      APP_TIMER_MODE_SINGLE_SHOT,
                      debounce_Handler);
 }
-

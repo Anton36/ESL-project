@@ -11,6 +11,7 @@
 
 #define BUTTON_PIN NRF_GPIO_PIN_MAP(1, 6)
 extern volatile bool double_click;
+extern bool maintain_flag;
 
 void gpio_button_init();
 void timer_init(void);
