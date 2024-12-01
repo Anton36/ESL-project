@@ -1,66 +1,102 @@
 
-#include "pwm_handler.h"
-#include "nrfx_systick.h"
+
 #include "led_handler.h"
 #include "nrf_log.h"
+#include "pwm_handler.h"
+#include "nrfx_pwm.h"
+#include <stdint.h>
+#include "button_handler.h"
+static nrfx_pwm_t pwm = NRFX_PWM_INSTANCE(0);
+APP_TIMER_DEF(pwm_starter_timer);
+static nrf_pwm_values_individual_t pwm_values;
+static nrf_pwm_sequence_t const pwm_seq =
+    {
+        .values.p_individual = &pwm_values,
+        .length = NRF_PWM_VALUES_LENGTH(pwm_values),
+        .repeats = 0,
+        .end_delay = 0};
 
-void systick_get_time(pwm_systick_t *pwm_systick)
+void pwm_init()
 {
-    nrfx_systick_get(&pwm_systick->pwm_time);
+
+    nrfx_pwm_config_t pwm_config =
+        {
+            .output_pins = {LED0_GREEN_PIN | NRFX_PWM_PIN_INVERTED,
+                            LED1_RED_PIN | NRFX_PWM_PIN_INVERTED,
+                            LED2_GREEN_PIN | NRFX_PWM_PIN_INVERTED,
+                            LED3_BLUE_PIN | NRFX_PWM_PIN_INVERTED},
+            .irq_priority = NRFX_PWM_DEFAULT_CONFIG_IRQ_PRIORITY,
+            .base_clock = (nrf_pwm_clk_t)NRFX_PWM_DEFAULT_CONFIG_BASE_CLOCK,
+            .count_mode = (nrf_pwm_mode_t)NRFX_PWM_DEFAULT_CONFIG_COUNT_MODE,
+            .top_value = PWM_TOP_VALUE,
+            .load_mode = NRF_PWM_LOAD_INDIVIDUAL,
+            .step_mode = (nrf_pwm_dec_step_t)NRFX_PWM_DEFAULT_CONFIG_STEP_MODE,
+
+        };
+
+    nrfx_pwm_init(&pwm, &pwm_config, NULL);
+    app_timer_init();
+    app_timer_create(&pwm_starter_timer, APP_TIMER_MODE_REPEATED, pwm_starter_timer_handler);
 }
 
-void pwm_systick_state(pwm_systick_t *pwm_systick, int maintain_flag)
+ void pwm_starter_timer_handler(void *p_context)
 {
-    int timeout;
+    display_current_color();
+    modify_duty_cycle_for_LED1();
+}
 
-    if (pwm_systick->state)
+void pwm_timer_start(void)
+{
+    app_timer_start(pwm_starter_timer, APP_TIMER_TICKS(PWM_TIMER_DELAY), NULL);
+}
+
+void start_pwm_playback()
+{
+    nrfx_pwm_simple_playback(&pwm, &pwm_seq, 1, NRFX_PWM_FLAG_LOOP);
+}
+
+void pwm_set_duty_cycle(int channel, int duty_cycle)
+{
+    duty_cycle %= PWM_TOP_VALUE + 1;
+
+    switch (channel)
     {
-        timeout = pwm_systick->frequency_hz - pwm_systick->current_duty;
+    case 0:
+        pwm_values.channel_0 = duty_cycle;
+        break;
+    case 1:
+        pwm_values.channel_1 = duty_cycle;
+        break;
+    case 2:
+        pwm_values.channel_2 = duty_cycle;
+        break;
+    case 3:
+        pwm_values.channel_3 = duty_cycle;
+        break;
     }
-    else
+}
+
+void changing_mode()
+{
+    duty_cycle = 0;
+    if (current_mode == MODE_HUE_MODIFY)
     {
-        timeout = pwm_systick->current_duty;
+        current_mode = MODE_SAT_MODIFY;
+        NRF_LOG_INFO("Saturation mode");
     }
-
-    if (!nrfx_systick_test(&pwm_systick->pwm_time, timeout))
+    else if (current_mode == MODE_SAT_MODIFY)
     {
-        return;
+        current_mode = MODE_BRIGHT_MODIFY;
+        NRF_LOG_INFO("Brightnes mode");
     }
-
-    pwm_systick->state = !pwm_systick->state;
-    if (maintain_flag == 0)
+    else if (current_mode == MODE_BRIGHT_MODIFY)
     {
-
-        if ((pwm_systick->current_duty == 1000) && (!pwm_systick->direction))
-        {
-            pwm_systick->direction = true;
-            NRF_LOG_INFO("Достигли предела скважности ,начинаем убывать");
-        }
-
-        if ((pwm_systick->current_duty == 0) && (pwm_systick->direction))
-        {
-            pwm_systick->direction = false;
-            NRF_LOG_INFO("Достигли начала скважности ,начинаем возрастать");
-        }
-
-        if (!pwm_systick->state && pwm_systick->direction)
-        {
-            pwm_systick->current_duty -= pwm_systick->step;
-        }
-
-        if (pwm_systick->state && !pwm_systick->direction)
-        {
-            pwm_systick->current_duty += pwm_systick->step;
-        }
+        current_mode = MODE_DISPLAY_COLOR;
+        NRF_LOG_INFO("Dispaly color mode");
     }
-
-    systick_get_time(pwm_systick);
-    if (pwm_systick->state == 0)
+    else if (current_mode == MODE_DISPLAY_COLOR)
     {
-        led_on(i_leds);
-    }
-    else
-    {
-        led_off(i_leds);
+        current_mode = MODE_HUE_MODIFY;
+        NRF_LOG_INFO("Hue mode");
     }
 }

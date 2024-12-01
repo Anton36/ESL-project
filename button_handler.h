@@ -8,6 +8,9 @@
 
 #define DEBOUNCING_DELAY 50
 #define DOUBLE_CLICK_DELAY 500
+#define LONG_PRESS_INITIAL_DELAY 800
+#define LONG_PRESS_REPEAT_DELAY 50
+#define PWM_TIMER_DELAY 30
 
 #define BUTTON_PIN NRF_GPIO_PIN_MAP(1, 6)
 extern volatile bool double_click;
