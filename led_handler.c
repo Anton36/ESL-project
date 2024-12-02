@@ -5,6 +5,12 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#include "memory_handler.h"
+
+#include "nrf_log_backend_usb.h"
 int duty_cycle = 0;
 static bool direction_led1 = true;
 
@@ -36,7 +42,7 @@ rgb_values rgb_value = {
 };
 
 hsv_values hsv_value = {
-    .hue = 360 * 0.15,
+    .hue = HUE_MAX_VALUE * 0.15,
     .saturation = PWM_TOP_VALUE,
     .value = PWM_TOP_VALUE,
 };
@@ -113,7 +119,7 @@ void modify_hsv()
     switch (current_mode)
     {
     case MODE_HUE_MODIFY:
-        hsv_value.hue += steps_for_hsv_change.for_hue_mode;
+        hsv_value.hue = (hsv_value.hue + steps_for_hsv_change.for_hue_mode) % HUE_MAX_VALUE;
 
         break;
 
@@ -132,7 +138,7 @@ void modify_hsv()
     }
 }
 
-void modify_duty_cycle_for_HSV(uint16_t *value, bool *direction, uint8_t step)
+void modify_duty_cycle_for_HSV(uint32_t *value, bool *direction, uint8_t step)
 {
     if (*direction)
     {
@@ -157,20 +163,18 @@ void modify_duty_cycle_for_HSV(uint16_t *value, bool *direction, uint8_t step)
 }
 void display_current_color(void)
 {
-    LOG_BACKEND_USB_PROCESS();
-    NRF_LOG_PROCESS();
 
     hsv_to_rgb(hsv_value.hue, hsv_value.saturation, hsv_value.value, &rgb_value.red, &rgb_value.green, &rgb_value.blue);
 
-    NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
-    // NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
+    // NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
+    NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
 
     pwm_set_duty_cycle(1, rgb_value.red);
     pwm_set_duty_cycle(2, rgb_value.green);
     pwm_set_duty_cycle(3, rgb_value.blue);
 }
 
-void hsv_to_rgb(uint16_t h, uint16_t s, uint16_t v, uint8_t *r, uint8_t *g, uint8_t *b)
+void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint8_t *r, uint8_t *g, uint8_t *b)
 {
 
     h %= 360;

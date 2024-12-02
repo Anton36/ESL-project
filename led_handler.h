@@ -9,6 +9,7 @@
 #define LED1_RED_PIN NRF_GPIO_PIN_MAP(0, 8)
 #define LED2_GREEN_PIN NRF_GPIO_PIN_MAP(1, 9)
 #define LED3_BLUE_PIN NRF_GPIO_PIN_MAP(0, 12)
+#define HUE_MAX_VALUE 360
 
 extern int led_digits[];
 extern int duty_cycle;
@@ -17,10 +18,10 @@ void led_on(int);
 void led_off(int);
 void led_init(void);
 void modify_duty_cycle_for_LED1(void);
-void modify_duty_cycle_for_HSV(uint16_t *value, bool *direction, uint8_t step);
+void modify_duty_cycle_for_HSV(uint32_t *value, bool *direction, uint8_t step);
 void modify_hsv(void);
 void display_current_color(void);
-void hsv_to_rgb(uint16_t h, uint16_t s, uint16_t v,  uint8_t *r,  uint8_t *g,  uint8_t *b);
+void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint8_t *r, uint8_t *g, uint8_t *b);
 
 typedef enum
 {
@@ -57,11 +58,11 @@ typedef struct
 
 typedef struct
 {
-    uint16_t hue;
-    uint16_t saturation;
-    uint16_t value;
+    uint32_t hue;
+    uint32_t saturation;
+    uint32_t value;
 } hsv_values;
-
+extern hsv_values hsv_value;
 typedef struct
 {
     bool is_hue_increasing;

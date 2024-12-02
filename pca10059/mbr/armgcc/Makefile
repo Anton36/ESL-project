@@ -62,10 +62,12 @@ $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/external/utf_converter/utf.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_nvmc.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/button_handler.c \
   $(PROJ_DIR)/led_handler.c \
   $(PROJ_DIR)/pwm_handler.c \
+  $(PROJ_DIR)/memory_handler.c \
   
   
 
@@ -142,6 +144,7 @@ OPT = -O3 -g3
 CFLAGS += $(OPT)
 CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DAPP_TIMER_V2
+
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBOARD_PCA10059
 # CFLAGS += -DBSP_DEFINES_ONLY

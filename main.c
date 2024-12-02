@@ -20,6 +20,7 @@
 #include "pwm_handler.h"
 #include "nrfx_pwm.h"
 #include "nrfx_common.h"
+#include "memory_handler.h"
 
 void logs_init();
 
@@ -37,7 +38,7 @@ bool maintain_flag = 1;
 int main(void)
 {
     /* Configure board. */
- 
+
     app_timer_init();
     timer_init();
     nrfx_gpiote_init();
@@ -47,19 +48,17 @@ int main(void)
     pwm_init();
     start_pwm_playback();
     pwm_timer_start();
-   
-   
+    read_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
 
     NRF_LOG_INFO("Starting up  project with USB logging");
 
     /* Toggle LEDs. */
     while (true)
     {
-       
-       
-        __WFI();
+        LOG_BACKEND_USB_PROCESS();
+        NRF_LOG_PROCESS();
 
-     
+        __WFI();
     }
 }
 
@@ -68,5 +67,3 @@ void logs_init()
     NRF_LOG_INIT(NULL);
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
-
-

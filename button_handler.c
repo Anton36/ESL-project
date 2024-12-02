@@ -3,6 +3,7 @@
 #include "nrf_log.h"
 #include "pwm_handler.h"
 #include "led_handler.h"
+#include "memory_handler.h"
 volatile int number_of_click = 0;
 volatile bool debounce_timer_active = false;
 volatile bool doubleclick_timer_active = false;
@@ -52,7 +53,7 @@ void long_press_Handler(void *p_context)
     {
         if (longpress_timer_active == true)
         {
-             modify_hsv();
+            modify_hsv();
             NRF_LOG_INFO("Long Press active");
         }
         longpress_timer_active = true;
@@ -66,7 +67,7 @@ void long_press_repeat_handler(void *p_context)
     {
         if (longpress_timer_active == true)
         {
-             modify_hsv();
+            modify_hsv();
             NRF_LOG_INFO("Long Press active");
         }
     }
