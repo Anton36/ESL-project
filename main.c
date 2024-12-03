@@ -27,7 +27,7 @@ void logs_init();
 volatile bool double_click = false;
 
 int led_digits[] = {LED0_GREEN_PIN, LED1_RED_PIN, LED2_GREEN_PIN, LED3_BLUE_PIN};
-// static int id_digits[] = {6, 6, 1, 5};
+
 int i_leds = 0;
 int i_blink = 0;
 bool maintain_flag = 1;

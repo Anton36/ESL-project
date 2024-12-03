@@ -32,9 +32,9 @@ void read_from_memory(uint32_t *hue, uint32_t *saturation, uint32_t *value)
 {
     uint32_t hue_t, saturation_t, value_t;
 
-    hue_t = *((uint32_t *)(DATA_PAGE_START));                            // Читаем первое значение
-    saturation_t = *((uint32_t *)(DATA_PAGE_START + sizeof(uint32_t)));  // Читаем второе значение
-    value_t = *((uint32_t *)(DATA_PAGE_START + (sizeof(uint32_t) * 2))); // Читаем третье значение
+    hue_t = *((uint32_t *)(DATA_PAGE_START));                            
+    saturation_t = *((uint32_t *)(DATA_PAGE_START + sizeof(uint32_t)));  
+    value_t = *((uint32_t *)(DATA_PAGE_START + (sizeof(uint32_t) * 2))); 
 
     if (hue_t <= HUE_MAX_VALUE && saturation_t <= PWM_TOP_VALUE && value_t <= PWM_TOP_VALUE)
     {

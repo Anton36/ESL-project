@@ -166,7 +166,7 @@ void display_current_color(void)
 
     hsv_to_rgb(hsv_value.hue, hsv_value.saturation, hsv_value.value, &rgb_value.red, &rgb_value.green, &rgb_value.blue);
 
-    // NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
+    //NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
     NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
 
     pwm_set_duty_cycle(1, rgb_value.red);
@@ -174,7 +174,7 @@ void display_current_color(void)
     pwm_set_duty_cycle(3, rgb_value.blue);
 }
 
-void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint8_t *r, uint8_t *g, uint8_t *b)
+void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b)
 {
 
     h %= 360;

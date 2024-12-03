@@ -21,7 +21,7 @@ void modify_duty_cycle_for_LED1(void);
 void modify_duty_cycle_for_HSV(uint32_t *value, bool *direction, uint8_t step);
 void modify_hsv(void);
 void display_current_color(void);
-void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint8_t *r, uint8_t *g, uint8_t *b);
+void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b);
 
 typedef enum
 {
@@ -51,9 +51,9 @@ typedef struct
 
 typedef struct
 {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
+    uint32_t red;
+    uint32_t green;
+    uint32_t blue;
 } rgb_values;
 
 typedef struct
