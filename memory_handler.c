@@ -6,6 +6,16 @@
 #include <string.h>
 #include <stdint.h>
 #include "memory_handler.h"
+
+
+memory_control_structure_t memory_control = {
+    .erase_necessity = true,
+    .data_size = sizeof(hsv_value),
+    .adress_to_write = NULL,
+};
+
+
+
 void write_to_memory(uint32_t hue, uint32_t saturation, uint32_t value)
 {
     nrfx_nvmc_page_erase(DATA_PAGE_START);
@@ -30,17 +40,19 @@ void write_to_memory(uint32_t hue, uint32_t saturation, uint32_t value)
 
 void read_from_memory(uint32_t *hue, uint32_t *saturation, uint32_t *value)
 {
-    uint32_t hue_t, saturation_t, value_t;
+    uint32_t hue_temp;
+    uint32_t saturation_temp;
+    uint32_t value_temp;
 
-    hue_t = *((uint32_t *)(DATA_PAGE_START));                            
-    saturation_t = *((uint32_t *)(DATA_PAGE_START + sizeof(uint32_t)));  
-    value_t = *((uint32_t *)(DATA_PAGE_START + (sizeof(uint32_t) * 2))); 
+    hue_temp = *((uint32_t *)(DATA_PAGE_START));
+    saturation_temp = *((uint32_t *)(DATA_PAGE_START + sizeof(uint32_t)));
+    value_temp = *((uint32_t *)(DATA_PAGE_START + (sizeof(uint32_t) * 2)));
 
-    if (hue_t <= HUE_MAX_VALUE && saturation_t <= PWM_TOP_VALUE && value_t <= PWM_TOP_VALUE)
+    if (hue_temp <= HUE_MAX_VALUE && saturation_temp <= PWM_TOP_VALUE && value_temp <= PWM_TOP_VALUE)
     {
-        *hue = hue_t;
-        *saturation = saturation_t;
-        *value = value_t;
+        *hue = hue_temp;
+        *saturation = saturation_temp;
+        *value = value_temp;
         NRF_LOG_INFO("Loaded color: H:%d S:%d B:%d", *hue, *saturation, *value);
     }
 }

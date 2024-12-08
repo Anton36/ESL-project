@@ -7,7 +7,9 @@
 volatile int number_of_click = 0;
 volatile bool debounce_timer_active = false;
 volatile bool doubleclick_timer_active = false;
+volatile bool doubleclick_timer_event = false;
 volatile bool longpress_timer_active = false;
+volatile bool longpress_timer_event = false;
 
 APP_TIMER_DEF(debounce_timer);
 APP_TIMER_DEF(double_click_timer);
@@ -43,7 +45,10 @@ void double_click_Handler(void *p_context)
 {
     if (number_of_click == 2)
     {
-        changing_mode();
+        doubleclick_timer_event = true;
+        gpio_button_event_handler();
+
+        
     }
     number_of_click = 0;
 }
@@ -51,11 +56,7 @@ void long_press_Handler(void *p_context)
 {
     if (nrf_gpio_pin_read(BUTTON_PIN) == BUTTON_PRESSED_STATE)
     {
-        if (longpress_timer_active == true)
-        {
-            modify_hsv();
-            NRF_LOG_INFO("Long Press active");
-        }
+       
         longpress_timer_active = true;
         app_timer_start(long_press_timer_repeat, APP_TIMER_TICKS(LONG_PRESS_REPEAT_DELAY), NULL);
     }
@@ -67,7 +68,9 @@ void long_press_repeat_handler(void *p_context)
     {
         if (longpress_timer_active == true)
         {
-            modify_hsv();
+            longpress_timer_event = true;
+            gpio_button_event_handler();
+            
             NRF_LOG_INFO("Long Press active");
         }
     }
@@ -88,6 +91,21 @@ void gpio_button_init()
     nrfx_gpiote_in_event_enable(BUTTON_PIN, true);
 }
 
+void gpio_button_event_handler()
+{
+    if(longpress_timer_event)
+    {
+        modify_hsv();
+        longpress_timer_event = false;
+    }else if  (doubleclick_timer_event)
+    {
+        changing_mode();
+        doubleclick_timer_event = false;
+    }
+
+
+}
+
 void timer_init(void)
 {
 
@@ -105,3 +123,4 @@ void timer_init(void)
                      APP_TIMER_MODE_REPEATED,
                      long_press_repeat_handler);
 }
+

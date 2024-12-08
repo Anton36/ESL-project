@@ -11,6 +11,15 @@
 
 uint32_t data_to_write[3];
 uint32_t address;
+
+typedef struct 
+{
+    bool erase_necessity;
+    uint32_t data_size;
+    uint32_t *adress_to_write;
+
+} memory_control_structure_t;
+
 void write_to_memory(uint32_t hue, uint32_t saturation, uint32_t value);
 
 

@@ -18,5 +18,6 @@ extern bool maintain_flag;
 
 void gpio_button_init();
 void timer_init(void);
+void gpio_button_event_handler(void);
 
 #endif

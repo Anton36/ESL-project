@@ -21,6 +21,10 @@
 #include "nrfx_pwm.h"
 #include "nrfx_common.h"
 #include "memory_handler.h"
+#include "app_usbd.h"
+#include "app_usbd_serial_num.h"
+#include "app_usbd_cdc_acm.h"
+#include "usb_handler.h"
 
 void logs_init();
 
@@ -48,6 +52,7 @@ int main(void)
     pwm_init();
     start_pwm_playback();
     pwm_timer_start();
+    //usb_init();
     read_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
 
     NRF_LOG_INFO("Starting up  project with USB logging");
@@ -59,11 +64,17 @@ int main(void)
         NRF_LOG_PROCESS();
 
         __WFI();
+       // while (app_usbd_event_queue_process())
+       // {
+            /* Nothing to do */
+       // }
     }
 }
 
 void logs_init()
 {
     NRF_LOG_INIT(NULL);
+    
+
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 }

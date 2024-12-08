@@ -12,16 +12,16 @@
 #define HUE_MAX_VALUE 360
 
 extern int led_digits[];
-extern int duty_cycle;
+extern uint32_t duty_cycle;
 
 void led_on(int);
 void led_off(int);
 void led_init(void);
-void modify_duty_cycle_for_LED1(void);
-void modify_duty_cycle_for_HSV(uint32_t *value, bool *direction, uint8_t step);
+void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step,uint32_t max_value,uint32_t min_value);
 void modify_hsv(void);
 void display_current_color(void);
 void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b);
+void modify_led1(void);
 
 typedef enum
 {
@@ -31,43 +31,43 @@ typedef enum
     MODE_DISPLAY_COLOR
 } controller_mode_t;
 
-controller_mode_t current_mode;
+extern controller_mode_t current_mode;
 
 typedef struct
 {
-    uint8_t for_hue_mode;
-    uint8_t for_sat_mode;
-    uint8_t for_display_mode;
+    uint32_t for_hue_mode;
+    uint32_t for_sat_mode;
+    uint32_t for_display_mode;
 
-} steps_for_mods;
+} steps_for_mods_t;
 
 typedef struct
 {
-    uint8_t for_hue_mode;
-    uint8_t for_sat_mode;
-    uint8_t for_brightness_mode;
+    uint32_t for_hue_mode;
+    uint32_t for_sat_mode;
+    uint32_t for_brightness_mode;
 
-} steps_for_hsv_changing;
+} steps_for_hsv_changing_t;
 
 typedef struct
 {
     uint32_t red;
     uint32_t green;
     uint32_t blue;
-} rgb_values;
+} rgb_values_t;
 
 typedef struct
 {
     uint32_t hue;
     uint32_t saturation;
     uint32_t value;
-} hsv_values;
-extern hsv_values hsv_value;
+} hsv_values_t;
+extern hsv_values_t hsv_value;
 typedef struct
 {
     bool is_hue_increasing;
     bool is_saturation_increasing;
     bool is_value_increasing;
-} direction_hsv;
+} direction_hsv_t;
 
 #endif

@@ -43,7 +43,7 @@ void pwm_init()
 void pwm_starter_timer_handler(void *p_context)
 {
     display_current_color();
-    modify_duty_cycle_for_LED1();
+    modify_led1();
 }
 
 void pwm_timer_start(void)

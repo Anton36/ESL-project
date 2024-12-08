@@ -11,37 +11,37 @@
 #include "memory_handler.h"
 
 #include "nrf_log_backend_usb.h"
-int duty_cycle = 0;
-static bool direction_led1 = true;
+uint32_t duty_cycle = 0;
+bool direction_led1 = true;
 
 controller_mode_t current_mode = MODE_DISPLAY_COLOR;
 
-direction_hsv direction_for_hsv = {
+direction_hsv_t direction_for_hsv = {
     .is_hue_increasing = true,
     .is_saturation_increasing = true,
     .is_value_increasing = true,
 };
 
-steps_for_mods steps_for_mode = {
-    .for_hue_mode = 3,
-    .for_sat_mode = 6,
+static steps_for_mods_t steps_for_mode = {
+    .for_hue_mode = 6,
+    .for_sat_mode = 10,
     .for_display_mode = 0,
 
 };
 
-steps_for_hsv_changing steps_for_hsv_change = {
+static steps_for_hsv_changing_t steps_for_hsv_change = {
     .for_hue_mode = 2,
     .for_sat_mode = 1,
-    .for_brightness_mode = 1,
+    .for_brightness_mode = 4,
 
 };
-rgb_values rgb_value = {
+rgb_values_t rgb_value = {
     .red = 0,
     .green = 0,
     .blue = 0,
 };
 
-hsv_values hsv_value = {
+hsv_values_t hsv_value = {
     .hue = HUE_MAX_VALUE * 0.15,
     .saturation = PWM_TOP_VALUE,
     .value = PWM_TOP_VALUE,
@@ -68,49 +68,29 @@ void led_init()
         nrf_gpio_pin_write(led_digits[i], LED_OFF_STATE);
     }
 }
-
-void modify_duty_cycle_for_LED1()
+void modify_led1()
 {
-    uint8_t step;
-    if (current_mode == MODE_HUE_MODIFY)
+
+    switch (current_mode)
     {
-        step = steps_for_mode.for_hue_mode;
-    }
-    else if (current_mode == MODE_SAT_MODIFY)
-    {
-        step = steps_for_mode.for_sat_mode;
-    }
-    else if (current_mode == MODE_BRIGHT_MODIFY)
-    {
+    case MODE_HUE_MODIFY:
+        modify_duty_cycle(&duty_cycle, &direction_led1, steps_for_mode.for_hue_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
+        pwm_set_duty_cycle(0, duty_cycle);
+        break;
+
+    case MODE_SAT_MODIFY:
+        modify_duty_cycle(&duty_cycle, &direction_led1, steps_for_mode.for_sat_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
+        pwm_set_duty_cycle(0, duty_cycle);
+        break;
+
+    case MODE_DISPLAY_COLOR:
+        // modify_duty_cycle(&duty_cycle, &direction_led1, steps_for_mode.for_display_mode,  PWM_TOP_VALUE, PWM_MIN_VALUE);
+        pwm_set_duty_cycle(0, PWM_MIN_VALUE);
+        break;
+
+    case MODE_BRIGHT_MODIFY:
         pwm_set_duty_cycle(0, 100);
-        return;
-    }
-    else
-    {
-        step = steps_for_mode.for_display_mode;
-    }
-
-    if ((duty_cycle >= 100) && (direction_led1))
-    {
-        direction_led1 = false;
-        NRF_LOG_INFO("Достигли предела скважности ,начинаем убывать");
-    }
-
-    if ((duty_cycle <= 0) && (!direction_led1))
-    {
-        direction_led1 = true;
-        NRF_LOG_INFO("Достигли начала скважности ,начинаем возрастать");
-    }
-
-    pwm_set_duty_cycle(0, duty_cycle);
-    if (!direction_led1)
-    {
-
-        duty_cycle -= step;
-    }
-    else
-    {
-        duty_cycle += step;
+        break;
     }
 }
 
@@ -124,12 +104,12 @@ void modify_hsv()
         break;
 
     case MODE_SAT_MODIFY:
-        modify_duty_cycle_for_HSV(&hsv_value.saturation, &direction_for_hsv.is_saturation_increasing, steps_for_hsv_change.for_sat_mode);
+        modify_duty_cycle(&hsv_value.saturation, &direction_for_hsv.is_saturation_increasing, steps_for_hsv_change.for_sat_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
 
         break;
 
     case MODE_BRIGHT_MODIFY:
-        modify_duty_cycle_for_HSV(&hsv_value.value, &direction_for_hsv.is_value_increasing, steps_for_hsv_change.for_brightness_mode);
+        modify_duty_cycle(&hsv_value.value, &direction_for_hsv.is_value_increasing, steps_for_hsv_change.for_brightness_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
 
         break;
 
@@ -138,36 +118,45 @@ void modify_hsv()
     }
 }
 
-void modify_duty_cycle_for_HSV(uint32_t *value, bool *direction, uint8_t step)
+void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step, uint32_t max_value, uint32_t min_value)
 {
     if (*direction)
     {
-        *value += step;
-        NRF_LOG_INFO("%d = value", *value);
-        if (*value >= PWM_TOP_VALUE)
+
+        if (*value + step > max_value)
         {
-            *value = PWM_TOP_VALUE;
+            *value = max_value;
             *direction = false;
+        }
+        else
+        {
+            *value += step;
+            NRF_LOG_INFO("%d = value", *value);
         }
     }
     else
     {
-        *value -= step;
-        NRF_LOG_INFO("%d = value", *value);
-        if (*value <= PWM_MIN_VALUE)
+
+        if (*value < min_value + step)
         {
-            *value = PWM_MIN_VALUE;
+            *value = min_value;
             *direction = true;
         }
+        else
+        {
+            *value -= step;
+            NRF_LOG_INFO("%d = value", *value);
+        }
     }
+    
 }
 void display_current_color(void)
 {
 
     hsv_to_rgb(hsv_value.hue, hsv_value.saturation, hsv_value.value, &rgb_value.red, &rgb_value.green, &rgb_value.blue);
 
-    //NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
-    NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
+    // NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
+    //  NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
 
     pwm_set_duty_cycle(1, rgb_value.red);
     pwm_set_duty_cycle(2, rgb_value.green);

@@ -63,11 +63,14 @@ $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pwm.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_nvmc.c \
+  $(SDK_ROOT)/components/boards/boards.c \
   $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/button_handler.c \
   $(PROJ_DIR)/led_handler.c \
   $(PROJ_DIR)/pwm_handler.c \
   $(PROJ_DIR)/memory_handler.c \
+  
+
   
   
 
