@@ -63,18 +63,25 @@ int main(void)
         LOG_BACKEND_USB_PROCESS();
         NRF_LOG_PROCESS();
 
+<<<<<<< Updated upstream
         __WFI();
        // while (app_usbd_event_queue_process())
        // {
             /* Nothing to do */
        // }
+=======
+        //__WFI();
+        while (app_usbd_event_queue_process())
+        {
+            /* Nothing to do */
+        }
+>>>>>>> Stashed changes
     }
 }
 
 void logs_init()
 {
     NRF_LOG_INIT(NULL);
-    
 
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 }

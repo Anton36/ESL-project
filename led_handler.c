@@ -148,7 +148,6 @@ void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step, uint32_t
             NRF_LOG_INFO("%d = value", *value);
         }
     }
-    
 }
 void display_current_color(void)
 {
@@ -209,4 +208,44 @@ void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, ui
         *b = q;
         break;
     }
+}
+
+void rgb_to_hsv(uint32_t r, uint32_t g, uint32_t b, uint32_t *h, uint32_t *s, uint32_t *v)
+{
+    uint32_t Cmax = (r > g) ? ((r > b) ? r : b) : ((g > b) ? g : b);
+    uint32_t Cmin = (r < g) ? ((r < b) ? r : b) : ((g < b) ? g : b);
+    uint32_t delta = Cmax - Cmin;
+
+    if (delta == 0)
+    {
+        *h = 0;
+    }
+    else if (Cmax == r)
+    {
+        *h = 60 * (g - b) / delta;
+        if (*h < 0)
+            *h += 360;
+    }
+    else if (Cmax == g)
+    {
+        *h = 60 * (b - r) / delta + 120;
+    }
+    else
+    {
+        *h = 60 * (r - g) / delta + 240;
+    }
+
+    *h %= 360;
+
+    if (Cmax == 0)
+    {
+        *s = 0;
+    }
+    else
+    {
+
+        *s = (delta * 255) / Cmax;
+    }
+
+    *v = Cmax;
 }

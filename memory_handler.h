@@ -7,6 +7,12 @@
 #include "nrf_nvmc.h"
 #include "led_handler.h"
 
+typedef enum 
+{
+    CLI_SET_RGB,
+    CLI_SET_HSV,
+    CLI_HELP,
+} command_t;
 
 uint32_t address;
 
