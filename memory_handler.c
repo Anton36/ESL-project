@@ -47,17 +47,17 @@ void read_from_memory(uint32_t *hue, uint32_t *saturation, uint32_t *value)
     if (find_last_data_to_read(&memory_control.data_size, &memory_control.actual_adress, &memory_control.erase_necessity) == false)
         return;
 
-    uint32_t data_to_write[memory_control.data_size / WORD_SIZE];
+    uint32_t data_to_read[memory_control.data_size / WORD_SIZE];
 
     for (uint32_t i = 0; i < memory_control.data_size / WORD_SIZE; i++)
     {
-        data_to_write[i] = read_word(memory_control.actual_adress++);
+        data_to_read[i] = read_word(memory_control.actual_adress++);
     }
-    if (data_to_write[0] <= HUE_MAX_VALUE && data_to_write[1] <= PWM_TOP_VALUE && data_to_write[2] <= PWM_TOP_VALUE)
+    if (data_to_read[0] <= HUE_MAX_VALUE && data_to_read[1] <= PWM_TOP_VALUE && data_to_read[2] <= PWM_TOP_VALUE)
     {
-        *hue = data_to_write[0];
-        *saturation = data_to_write[1];
-        *value = data_to_write[2];
+        *hue = data_to_read[0];
+        *saturation = data_to_read[1];
+        *value = data_to_read[2];
         NRF_LOG_INFO("Loaded color: H:%d S:%d B:%d", *hue, *saturation, *value);
     }
 }

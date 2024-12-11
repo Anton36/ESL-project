@@ -52,7 +52,7 @@ int main(void)
     pwm_init();
     start_pwm_playback();
     pwm_timer_start();
-    //usb_init();
+    usb_init();
     read_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
 
     NRF_LOG_INFO("Starting up  project with USB logging");
@@ -60,14 +60,16 @@ int main(void)
     /* Toggle LEDs. */
     while (true)
     {
-        LOG_BACKEND_USB_PROCESS();
-        NRF_LOG_PROCESS();
+    LOG_BACKEND_USB_PROCESS();
+       NRF_LOG_PROCESS();
+       //NRF_LOG_INFO("command buffer size: %d", usb_service_handler.rx_buffer[0]);
 
-        __WFI();
-       // while (app_usbd_event_queue_process())
-       // {
+        //__WFI();
+       while (app_usbd_event_queue_process())
+       {
             /* Nothing to do */
-       // }
+       }
+       
     }
 }
 

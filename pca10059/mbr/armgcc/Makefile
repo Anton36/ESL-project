@@ -69,6 +69,7 @@ $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(PROJ_DIR)/led_handler.c \
   $(PROJ_DIR)/pwm_handler.c \
   $(PROJ_DIR)/memory_handler.c \
+  $(PROJ_DIR)/usb_handler.c \
   
 
   
@@ -169,6 +170,7 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin -fshort-enums
+
 
 
 # C++ flags common to all targets
