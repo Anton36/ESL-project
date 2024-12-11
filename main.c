@@ -52,7 +52,7 @@ int main(void)
     pwm_init();
     start_pwm_playback();
     pwm_timer_start();
-    //usb_init();
+    usb_init();
     read_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
 
     NRF_LOG_INFO("Starting up  project with USB logging");
@@ -63,19 +63,11 @@ int main(void)
         LOG_BACKEND_USB_PROCESS();
         NRF_LOG_PROCESS();
 
-<<<<<<< Updated upstream
-        __WFI();
-       // while (app_usbd_event_queue_process())
-       // {
-            /* Nothing to do */
-       // }
-=======
         //__WFI();
         while (app_usbd_event_queue_process())
         {
             /* Nothing to do */
         }
->>>>>>> Stashed changes
     }
 }
 
