@@ -70,9 +70,7 @@ void write_to_memory(uint32_t hue, uint32_t saturation, uint32_t value)
         memory_control.actual_adress = (uint32_t *)DATA_PAGE_START;
         memory_control.erase_necessity = false;
     }
-    else
-    {
-    }
+   
 
     uint32_t data_to_write[3] = {hue, saturation, value};
 

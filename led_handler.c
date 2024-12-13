@@ -43,8 +43,8 @@ rgb_values_t rgb_value = {
 
 hsv_values_t hsv_value = {
     .hue = HUE_MAX_VALUE * 0.15,
-    .saturation = PWM_TOP_VALUE,
-    .value = PWM_TOP_VALUE,
+    .saturation = SAT_VALUE_MAX_VALUE,
+    .value = SAT_VALUE_MAX_VALUE,
 };
 
 void led_on(int led_index)
@@ -84,7 +84,7 @@ void modify_led1()
         break;
 
     case MODE_DISPLAY_COLOR:
-        // modify_duty_cycle(&duty_cycle, &direction_led1, steps_for_mode.for_display_mode,  PWM_TOP_VALUE, PWM_MIN_VALUE);
+
         pwm_set_duty_cycle(0, PWM_MIN_VALUE);
         break;
 
@@ -104,12 +104,12 @@ void modify_hsv()
         break;
 
     case MODE_SAT_MODIFY:
-        modify_duty_cycle(&hsv_value.saturation, &direction_for_hsv.is_saturation_increasing, steps_for_hsv_change.for_sat_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
+        modify_duty_cycle(&hsv_value.saturation, &direction_for_hsv.is_saturation_increasing, steps_for_hsv_change.for_sat_mode, SAT_VALUE_MAX_VALUE, PWM_MIN_VALUE);
 
         break;
 
     case MODE_BRIGHT_MODIFY:
-        modify_duty_cycle(&hsv_value.value, &direction_for_hsv.is_value_increasing, steps_for_hsv_change.for_brightness_mode, PWM_TOP_VALUE, PWM_MIN_VALUE);
+        modify_duty_cycle(&hsv_value.value, &direction_for_hsv.is_value_increasing, steps_for_hsv_change.for_brightness_mode, SAT_VALUE_MAX_VALUE, PWM_MIN_VALUE);
 
         break;
 
@@ -131,7 +131,7 @@ void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step, uint32_t
         else
         {
             *value += step;
-            NRF_LOG_INFO("%d = value", *value);
+            // NRF_LOG_INFO("%d = value", *value);
         }
     }
     else
@@ -145,7 +145,7 @@ void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step, uint32_t
         else
         {
             *value -= step;
-            NRF_LOG_INFO("%d = value", *value);
+            // NRF_LOG_INFO("%d = value", *value);
         }
     }
 }
@@ -154,8 +154,8 @@ void display_current_color(void)
 
     hsv_to_rgb(hsv_value.hue, hsv_value.saturation, hsv_value.value, &rgb_value.red, &rgb_value.green, &rgb_value.blue);
 
-    // NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
-    //  NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
+    //NRF_LOG_INFO("Current color R:%d G:%d B:%d", rgb_value.red, rgb_value.green, rgb_value.blue);
+    //NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
 
     pwm_set_duty_cycle(1, rgb_value.red);
     pwm_set_duty_cycle(2, rgb_value.green);
@@ -164,50 +164,58 @@ void display_current_color(void)
 
 void hsv_to_rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b)
 {
+    float hue = h % 360;
+    float saturation = s / 100.0f;
+    float value = v / 100.0f;
+    uint32_t region = h / 60;
 
-    h %= 360;
+    float c = value * saturation;
+    float x = c * (1 - fabsf(fmodf(hue / 60.0f, 2) - 1));
+    float m = value - c;
 
-    uint8_t region = h / 60;
-    uint8_t remainder = h % 60;
-
-    uint32_t p = (v * (255 - s)) / 255;
-    uint32_t q = (v * (255 - ((s * remainder) / 60))) / 255;
-    uint32_t t = (v * (255 - ((s * (60 - remainder)) / 60))) / 255;
-
+    float r_prime = 0, g_prime = 0, b_prime = 0;
     switch (region)
     {
     case 0:
-        *r = v;
-        *g = t;
-        *b = p;
+
+        r_prime = c;
+        g_prime = x;
+        b_prime = 0;
         break;
     case 1:
-        *r = q;
-        *g = v;
-        *b = p;
+
+        r_prime = x;
+        g_prime = c;
+        b_prime = 0;
         break;
     case 2:
-        *r = p;
-        *g = v;
-        *b = t;
+
+        r_prime = 0;
+        g_prime = c;
+        b_prime = x;
         break;
     case 3:
-        *r = p;
-        *g = q;
-        *b = v;
+
+        r_prime = 0;
+        g_prime = x;
+        b_prime = c;
         break;
     case 4:
-        *r = t;
-        *g = p;
-        *b = v;
+
+        r_prime = x;
+        g_prime = 0;
+        b_prime = c;
         break;
     case 5:
-    default:
-        *r = v;
-        *g = p;
-        *b = q;
+        r_prime = c;
+        g_prime = 0;
+        b_prime = x;
         break;
     }
+
+    *r = (uint8_t)((r_prime + m) * 255);
+    *g = (uint8_t)((g_prime + m) * 255);
+    *b = (uint8_t)((b_prime + m) * 255);
 }
 
 void rgb_to_hsv(uint32_t r, uint32_t g, uint32_t b, uint32_t *h, uint32_t *s, uint32_t *v)

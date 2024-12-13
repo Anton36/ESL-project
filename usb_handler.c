@@ -144,25 +144,45 @@ void string_split(char *str, char *tokens, uint32_t max_number_of_operators, uin
     }
 }
 
-void command_handler()
+void command_handler(void)
 {
     memcpy(usb_service_handler.command, usb_service_handler.command_buffer, sizeof(usb_service_handler.command_buffer));
     memset(usb_service_handler.command_buffer, 0, sizeof(usb_service_handler.command_buffer));
     usb_service_handler.buffer_index = 0;
+    char response[64];
+    if (usb_service_handler.command[0] == '\0')
+    {
+        NRF_LOG_INFO("emperty string");
+        snprintf(response, sizeof(response), "\r\nemperty string please try again\r\n");
+        usb_send_response(response);
+        return;
+    }
 
     char tokens[MAX_NUMBER_OF_OPERATORS][MAX_PARAMETR_SIZE];
     string_split(usb_service_handler.command, (char *)tokens, MAX_NUMBER_OF_OPERATORS, MAX_PARAMETR_SIZE);
 
-    char response[64];
     char *pend = NULL;
+
     if (strcmp(tokens[0], "RGB") == 0)
     {
         uint32_t r = strtol(tokens[1], &pend, 10);
         uint32_t g = strtol(tokens[2], &pend, 10);
         uint32_t b = strtol(tokens[3], &pend, 10);
+        if (r <= RGB_MAX_VALUE && g <= RGB_MAX_VALUE && b <= RGB_MAX_VALUE)
+        {
         rgb_to_hsv(r, g, b, &hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
         snprintf(response, sizeof(response), "\r\nRGB set to %lu %lu %lu\r\n", r, g, b);
         usb_send_response(response);
+        }
+        else
+        {
+            snprintf(response, sizeof(response), "\r\n Invalid values \r\n");
+            usb_send_response(response);
+        }
+
+   
+
+     
     }
     else if (strcmp(tokens[0], "HSV") == 0)
     {
@@ -170,15 +190,23 @@ void command_handler()
         uint32_t h = strtol(tokens[1], &pend, 10);
         uint32_t s = strtol(tokens[2], &pend, 10);
         uint32_t v = strtol(tokens[3], &pend, 10);
-        hsv_value.hue = h;
-        hsv_value.saturation = s;
-        hsv_value.value = v;
-        snprintf(response, sizeof(response), "\r\nHSV set to %lu %lu %lu\r\n", h, s, v);
-        usb_send_response(response);
+        if (h <= HUE_MAX_VALUE && s <= SAT_VALUE_MAX_VALUE && v <= SAT_VALUE_MAX_VALUE)
+        {
+            hsv_value.hue = h;
+            hsv_value.saturation = s;
+            hsv_value.value = v;
+            snprintf(response, sizeof(response), "\r\nHSV set to %lu %lu %lu\r\n", h, s, v);
+            usb_send_response(response);
+        }
+        else
+        {
+            snprintf(response, sizeof(response), "\r\n Invalid values \r\n");
+            usb_send_response(response);
+        }
     }
     else if (strcmp(tokens[0], "help") == 0)
     {
-        usb_send_response("\r\nAvailable commands:\r\n RGB <r> <g> <b> - Set color using RGB \r\n HSV <h> <s> <v> - Set color using HSV \r\n");
+        usb_send_response("\r\nAvailable commands:\r\n RGB <r(0-255)> <g>(0-255) <b>(0-255) - Set color using RGB \r\n HSV <h>(0-360) <s>(0-100) <v>(0-100) - Set color using HSV \r\n");
     }
     else
     {

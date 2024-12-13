@@ -10,6 +10,8 @@
 #define LED2_GREEN_PIN NRF_GPIO_PIN_MAP(1, 9)
 #define LED3_BLUE_PIN NRF_GPIO_PIN_MAP(0, 12)
 #define HUE_MAX_VALUE 360
+#define SAT_VALUE_MAX_VALUE 100
+#define RGB_MAX_VALUE 255
 
 extern int led_digits[];
 extern uint32_t duty_cycle;
