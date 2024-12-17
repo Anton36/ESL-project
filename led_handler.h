@@ -12,6 +12,8 @@
 #define HUE_MAX_VALUE 360
 #define SAT_VALUE_MAX_VALUE 100
 #define RGB_MAX_VALUE 255
+#define MAX_NAME_LENGHT 12
+#define MAX_NUMBER_OF_SAVED_COLORS 10
 
 extern int led_digits[];
 extern uint32_t duty_cycle;
@@ -66,6 +68,15 @@ typedef struct
     uint32_t saturation;
     uint32_t value;
 } hsv_values_t;
+
+ typedef struct 
+{
+    char name[MAX_NAME_LENGHT];
+    uint32_t hue;
+    uint32_t saturation;
+    uint32_t value;
+}saved_color_t;
+
 extern hsv_values_t hsv_value;
 typedef struct
 {

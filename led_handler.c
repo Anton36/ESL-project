@@ -14,6 +14,8 @@
 uint32_t duty_cycle = 0;
 bool direction_led1 = true;
 
+saved_color_t color_list[MAX_NUMBER_OF_SAVED_COLORS];
+
 controller_mode_t current_mode = MODE_DISPLAY_COLOR;
 
 direction_hsv_t direction_for_hsv = {
@@ -46,6 +48,8 @@ hsv_values_t hsv_value = {
     .saturation = SAT_VALUE_MAX_VALUE,
     .value = SAT_VALUE_MAX_VALUE,
 };
+
+
 
 void led_on(int led_index)
 {
@@ -120,6 +124,7 @@ void modify_hsv()
 
 void modify_duty_cycle(uint32_t *value, bool *direction, uint32_t step, uint32_t max_value, uint32_t min_value)
 {
+    NRF_LOG_INFO("Current color H:%d S:%d L:%d", hsv_value.hue, hsv_value.saturation, hsv_value.value);
     if (*direction)
     {
 
@@ -224,6 +229,7 @@ void rgb_to_hsv(uint32_t r, uint32_t g, uint32_t b, uint32_t *h, uint32_t *s, ui
     uint32_t Cmin = (r < g) ? ((r < b) ? r : b) : ((g < b) ? g : b);
     uint32_t delta = Cmax - Cmin;
 
+    // Hue Calculation
     if (delta == 0)
     {
         *h = 0;
@@ -242,18 +248,18 @@ void rgb_to_hsv(uint32_t r, uint32_t g, uint32_t b, uint32_t *h, uint32_t *s, ui
     {
         *h = 60 * (r - g) / delta + 240;
     }
-
     *h %= 360;
 
+    // Saturation Calculation (S in range 0-100)
     if (Cmax == 0)
     {
         *s = 0;
     }
     else
     {
-
-        *s = (delta * 255) / Cmax;
+        *s = (delta * 100) / Cmax;
     }
 
-    *v = Cmax;
+    // Value Calculation (V in range 0-100)
+    *v = (Cmax * 100) / 255;
 }

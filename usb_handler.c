@@ -15,7 +15,7 @@
 #include "app_usbd_cdc_acm.h"
 #include "usb_handler.h"
 #include "led_handler.h"
-
+extern saved_color_t color_list[MAX_NUMBER_OF_SAVED_COLORS];
 usb_service_handler_t usb_service_handler = {
     .buffer_index = 0,
 };
@@ -170,19 +170,15 @@ void command_handler(void)
         uint32_t b = strtol(tokens[3], &pend, 10);
         if (r <= RGB_MAX_VALUE && g <= RGB_MAX_VALUE && b <= RGB_MAX_VALUE)
         {
-        rgb_to_hsv(r, g, b, &hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
-        snprintf(response, sizeof(response), "\r\nRGB set to %lu %lu %lu\r\n", r, g, b);
-        usb_send_response(response);
+            rgb_to_hsv(r, g, b, &hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
+            snprintf(response, sizeof(response), "\r\nRGB set to %lu %lu %lu\r\n", r, g, b);
+            usb_send_response(response);
         }
         else
         {
             snprintf(response, sizeof(response), "\r\n Invalid values \r\n");
             usb_send_response(response);
         }
-
-   
-
-     
     }
     else if (strcmp(tokens[0], "HSV") == 0)
     {
@@ -206,12 +202,172 @@ void command_handler(void)
     }
     else if (strcmp(tokens[0], "help") == 0)
     {
-        usb_send_response("\r\nAvailable commands:\r\n RGB <r(0-255)> <g>(0-255) <b>(0-255) - Set color using RGB \r\n HSV <h>(0-360) <s>(0-100) <v>(0-100) - Set color using HSV \r\n");
+        usb_send_response("\r\nAvailable commands:\r\n RGB <r(0-255)> <g>(0-255) <b>(0-255) - Set color using RGB \r\n HSV <h>(0-360) <s>(0-100) <v>(0-100) - Set color using HSV \r\n add_rgb_color <r(0-255)> <g>(0-255) <b>(0-255) color_name - add color using RGB\r\n add_hsv_color <h>(0-360) <s>(0-100) <v>(0-100) color_name - add color using HSV\r\n add_current_color color_name - Add  color of RGB led with name to local storage\r\n del_color color_name - Delete the color by name \r\n apply_color color_name - Apply the color from local storage by name to RGB led\r\n list_colors - Show a list of saved colors \r\n");
+    }
+    else if (strcmp(tokens[0], "add_rgb_color") == 0)
+    {
+        uint32_t r = strtol(tokens[1], &pend, 10);
+        uint32_t g = strtol(tokens[2], &pend, 10);
+        uint32_t b = strtol(tokens[3], &pend, 10);
+        if (r <= RGB_MAX_VALUE && g <= RGB_MAX_VALUE && b <= RGB_MAX_VALUE)
+        {
+            int index = 0;
+            uint32_t hue = 0;
+            uint32_t saturation = 0;
+            uint32_t value = 0;
+            rgb_to_hsv(r, g, b, &hue, &saturation, &value);
+
+            if ((index = find_spot_to_save_light(color_list, MAX_NUMBER_OF_SAVED_COLORS)) != -1)
+
+            {
+                color_list[index].hue = hue;
+                color_list[index].saturation = saturation;
+                color_list[index].value = value;
+                strncpy((char *)color_list[index].name, tokens[4], MAX_NAME_LENGHT);
+                snprintf(response, sizeof(response), "\r\n color %s saved\r\n", tokens[4]);
+                usb_send_response(response);
+            }
+            else
+            {
+                snprintf(response, sizeof(response), "\r\nlist is full");
+                usb_send_response(response);
+            }
+        }
+        else
+        {
+            snprintf(response, sizeof(response), "\r\n Invalid values \r\n");
+            usb_send_response(response);
+        }
+    }
+    else if (strcmp(tokens[0], "add_hsv_color") == 0)
+    {
+        uint32_t h = strtol(tokens[1], &pend, 10);
+        uint32_t s = strtol(tokens[2], &pend, 10);
+        uint32_t v = strtol(tokens[3], &pend, 10);
+        if (h <= HUE_MAX_VALUE && s <= SAT_VALUE_MAX_VALUE && v <= SAT_VALUE_MAX_VALUE)
+        {
+            int index = 0;
+            if ((index = find_spot_to_save_light(color_list, MAX_NUMBER_OF_SAVED_COLORS)) != -1)
+
+            {
+                color_list[index].hue = h;
+                color_list[index].saturation = s;
+                color_list[index].value = v;
+                strncpy((char *)color_list[index].name, tokens[4], MAX_NAME_LENGHT);
+                snprintf(response, sizeof(response), "color %s saved\r\n", tokens[4]);
+                usb_send_response(response);
+            }
+            else
+            {
+                snprintf(response, sizeof(response), "list is full");
+                usb_send_response(response);
+            }
+        }
+        else
+        {
+            snprintf(response, sizeof(response), " Invalid values \r\n");
+            usb_send_response(response);
+        }
+    }
+    else if (strcmp(tokens[0], "add_current_color") == 0)
+    {
+        uint32_t h = hsv_value.hue;
+        uint32_t s = hsv_value.saturation;
+        uint32_t v = hsv_value.value;
+        int index = 0;
+        if ((index = find_spot_to_save_light(color_list, MAX_NUMBER_OF_SAVED_COLORS)) != -1)
+        {
+            color_list[index].hue = h;
+            color_list[index].saturation = s;
+            color_list[index].value = v;
+            strncpy((char *)color_list[index].name, tokens[1], MAX_NAME_LENGHT);
+            snprintf(response, sizeof(response), "\r\ncolor %s saved\r\n", tokens[4]);
+            usb_send_response(response);
+        }
+        else
+        {
+            snprintf(response, sizeof(response), "list is full");
+            usb_send_response(response);
+        }
+    }
+    else if (strcmp(tokens[0], "del_color") == 0)
+    {
+        int index = find_color_in_list(color_list, MAX_NUMBER_OF_SAVED_COLORS, tokens[1]);
+        if (index != -1)
+        {
+            memset(&color_list[index], 0, sizeof(color_list[index]));
+            snprintf(response, sizeof(response), "\r\nColor '%s' deleted successfully.\r\n", tokens[1]);
+            usb_send_response(response);
+            return;
+        }
+        snprintf(response, sizeof(response), "\r\nColor '%s' not found.\r\n", tokens[1]);
+        usb_send_response(response);
+    }
+    else if (strcmp(tokens[0], "apply_color") == 0)
+    {
+        int index = find_color_in_list(color_list, MAX_NUMBER_OF_SAVED_COLORS, tokens[1]);
+        if (index != -1)
+        {
+            hsv_value.hue = color_list[index].hue;
+            hsv_value.saturation = color_list[index].saturation;
+            hsv_value.value = color_list[index].value;
+            snprintf(response, sizeof(response), "\r\ncolor set to %s \r\n", tokens[1]);
+            usb_send_response(response);
+        }
+        else
+        {
+            snprintf(response, sizeof(response), "\r\ncolor not found \r\n");
+            usb_send_response(response);
+        }
+    }
+    else if (strcmp(tokens[0], "list_colors") == 0)
+    {
+        print_color_list(color_list, MAX_NUMBER_OF_SAVED_COLORS);
     }
     else
     {
         usb_send_response("\r\nUnknown command. Type 'help' for a list of commands.\r\n");
     }
+}
+
+int find_spot_to_save_light(saved_color_t *color_list, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (color_list[i].name[0] == '\0')
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void print_color_list(saved_color_t *color_list, int size)
+{
+    char response[64];
+    for (int i = 0; i < size; i++)
+    {
+        if (color_list[i].name[0] != '\0')
+        {
+            strncat(response, "\r\n", 2);
+            strncat(response, color_list[i].name, MAX_NAME_LENGHT);
+        }
+    }
+    strncat(response, "\r\n", 2);
+    usb_send_response(response);
+}
+
+int find_color_in_list(saved_color_t *color_list, int size, const char *name)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (strcmp(color_list[i].name, name) == 0)
+        {
+            return i;
+            break;
+        }
+    }
+    return -1;
 }
 
 void usb_send_response(const char *response)

@@ -29,6 +29,7 @@
 void logs_init();
 
 volatile bool double_click = false;
+extern saved_color_t color_list[MAX_NUMBER_OF_SAVED_COLORS];
 
 int led_digits[] = {LED0_GREEN_PIN, LED1_RED_PIN, LED2_GREEN_PIN, LED3_BLUE_PIN};
 
@@ -53,7 +54,9 @@ int main(void)
     start_pwm_playback();
     pwm_timer_start();
     usb_init();
-    read_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
+
+    read_HSV_from_memory(&hsv_value.hue, &hsv_value.saturation, &hsv_value.value);
+    read_colors_from_memory(color_list, MAX_NUMBER_OF_SAVED_COLORS);
 
     NRF_LOG_INFO("Starting up  project with USB logging");
 

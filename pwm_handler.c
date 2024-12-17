@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "button_handler.h"
 #include "memory_handler.h"
+extern saved_color_t color_list[MAX_NUMBER_OF_SAVED_COLORS];
 static nrfx_pwm_t pwm = NRFX_PWM_INSTANCE(0);
 APP_TIMER_DEF(pwm_starter_timer);
 static nrf_pwm_values_individual_t pwm_values;
@@ -94,7 +95,9 @@ void changing_mode()
     {
         current_mode = MODE_DISPLAY_COLOR;
         NRF_LOG_INFO("Dispaly color mode");
-        write_to_memory(hsv_value.hue, hsv_value.saturation, hsv_value.value);
+        write_HSV_to_memory(hsv_value.hue, hsv_value.saturation, hsv_value.value);
+
+        write_colors_to_memory(color_list, MAX_NUMBER_OF_SAVED_COLORS);
     }
     else if (current_mode == MODE_DISPLAY_COLOR)
     {
